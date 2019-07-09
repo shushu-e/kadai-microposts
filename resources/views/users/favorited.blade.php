@@ -8,7 +8,7 @@
                     <h3 class="panel-title">{{ $user->name }}</h3>
                 </div>
                 <div class="panel-body">
-                <img class="media-object img-rounded img-responsive" src="{{ Gravatar::src($user->email, 500) }}" alt="">
+                    <img class="media-object img-rounded img-responsive" src="{{ Gravatar::src($user->email, 500) }}" alt="">
                 </div>
             </div>
             @include('user_follow.follow_button', ['user' => $user])
@@ -20,9 +20,34 @@
                 <li role="presentation" class="{{ Request::is('users/*/followers') ? 'active' : '' }}"><a href="{{ route('users.followers', ['id' => $user->id]) }}">Followers <span class="badge">{{ $count_followers }}</span></a></li>
                 <li role="presentation" class="{{ Request::is('users/*/favorited') ? 'active' : '' }}"><a href="{{ route('users.favorited', ['id' => $user->id]) }}">Favorites <span class="badge">{{ $count_favorited }}</span></a></li>
             </ul>
-            @if (count($microposts) > 0)
-                @include('microposts.microposts', ['microposts' => $microposts])
-            @endif
+            
+            <ul class="media-list">
+            @foreach ($microposts as $micropost)
+            <?php $user = $micropost->user; ?>
+           <li class="media">
+           <div class="media-left">
+            <img class="media-object img-rounded" src="{{ Gravatar::src($user->email, 50) }}" alt="">
+           </div>
+           <div class="media-body">
+               <div>
+                 {!! link_to_route('users.show', $user->name, ['id' => $user->id]) !!} <span class="text-muted">posted at {{ $micropost->created_at }}</span>
+               </div>
+            <div>
+                <p>{!! nl2br(e($micropost->content)) !!}</p>
+            </div>
+            @include('micropost_favorite.favorite_button', ['user' => $user])
+            <div>
+                @if (Auth::user()->id == $micropost->user_id)
+                    {!! Form::open(['route' => ['microposts.destroy', $micropost->id], 'method' => 'delete']) !!}
+                        {!! Form::submit('Delete', ['class' => 'btn btn-danger btn-xs']) !!}
+                    {!! Form::close() !!}
+                @endif
+            </div>
+        </div>
+    </li>
+@endforeach
+</ul>
+{!! $microposts->render() !!}
         </div>
     </div>
 @endsection

@@ -103,4 +103,54 @@ public function feed_microposts()
         $follow_user_ids[] = $this->id;
         return Micropost::whereIn('user_id', $follow_user_ids);
     }
+    
+    
+    //多対多の関係追加
+    public function favorited()
+    {
+        return $this->belongsToMany(Micropost::class, 'user_favorites', 'user_id', 'micropost_id')->withTimestamps();
+    }
+    
+    //追加
+    public function favorite($micropostId)
+{
+    // 既にお気に入りしているかの確認 
+    $exist = $this->is_favoriting($micropostId);
+
+    if ($exist) {
+
+        // 既にお気に入りしていれば何もしない
+
+        return false;
+
+    } else {
+
+        // 未であればお気に入りする
+
+        $this->favorited()->attach($micropostId);
+
+        return true;
+
+    }
+}
+
+public function unfavorite($micropostId)
+{
+    // 既にお気に入りしているかの確認
+    $exist = $this->is_favoriting($micropostId);
+
+    if ($exist) {
+        // 既にお気に入りしていれば外す
+        $this->favorited()->detach($micropostId);
+        return true;
+    } else {
+        // 未であれば何もしない
+        return false;
+    }
+}
+
+public function is_favoriting($micropostId) {
+    return $this->favorited()->where('micropost_id', $micropostId)->exists();
+}
+
 }
